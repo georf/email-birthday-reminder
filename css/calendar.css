@@ -1,0 +1,48 @@
+body { 
+  font-size: 62.5%; 
+}
+table {
+  border-collapse: collapse;
+  border: 0;
+}
+td.date, th {
+  border: 1px solid #CCC;
+}
+td.date {
+  cursor: pointer;
+}
+th {
+  width:250px;
+  text-align: center;
+  font-size:1.2em;
+}
+td h3 {
+  text-align: center;
+  padding:0;
+  margin:0;
+  font-size:1.1em;
+}
+
+.error {
+  border: 1px solid #FF1100;
+  padding: 3px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.hide {
+  display: none;
+}
+
+label, input { display:block; }
+input.text { margin-bottom:12px; width:95%; padding: .4em; }
+fieldset { padding:0; border:0; margin-top:25px; }
+.ui-dialog .ui-state-error { padding: .3em; }
+
+.birthday {
+  border-radius: 2px;
+  padding: 3px;
+  background-color: #00D068;
+  text-align: center;
+  margin: 1px;
+}
