@@ -103,7 +103,7 @@ class Birthday {
   }
 
   public function __toString() {
-    return sprintf("%30s%5d Jahre%11s\n%s", $this->name, $this->age(), $this->date, $this->hint);
+    return sprintf("%30s%5d Jahre%11s\n%s", $this->name, $this->age(), date('d.m.Y', $this->time()), $this->hint);
   }
 
   public static function todayHaveBirthdays() {
