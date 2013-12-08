@@ -98,8 +98,8 @@ class Client
     public function __construct($pServerController)
     {
         $this->controller = $pServerController;
-        if (isset($_SERVER['PATH_INFO']))
-            $this->setUrl($_SERVER['PATH_INFO']);
+        if (isset($_SERVER['REQUEST_URI']))
+            $this->setUrl($_SERVER['REQUEST_URI']);
 
         $this->setupFormats();
     }
