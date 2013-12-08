@@ -79,7 +79,8 @@ class Birthday {
 
   public function diff() {
     $diff = date('z', $this->time()) - date('z');
-    return $diff%(date('L')? 366 : 365);
+    $days = date('L')? 366 : 365;
+    return ($diff + $days) % $days;
   }
 
   public function next7() {
@@ -94,11 +95,15 @@ class Birthday {
     $today = new \DateTime();
     $birthdate = new \DateTime($this->date);
     $interval = $today->diff($birthdate);
-    return $interval->format('%y');
+    $age = $interval->format('%y');
+    if ($today->format('m-d') != $birthdate->format('m-d')) {
+      $age++;
+    }
+    return $age;
   }
 
   public function __toString() {
-    return sprintf("%30s%5d Jahre\n%s", $this->name, $this->age(), $this->hint);
+    return sprintf("%30s%5d Jahre%11s\n%s", $this->name, $this->age(), $this->date, $this->hint);
   }
 
   public static function todayHaveBirthdays() {
@@ -128,16 +133,26 @@ class Birthday {
         $next14[] = $birthday;
       }
     }
-    $text = 
-    "HEUTE\n".
-    "==========================================\n".
-    implode("\n------------------------------------------\n", $today)."\n".
-    "Nächste Woche\n".
-    "==========================================\n".
-    implode("\n------------------------------------------\n", $next7)."\n".
-    "Nächste 2 Wochen\n".
-    "==========================================\n".
-    implode("\n------------------------------------------\n", $next14)."\n";
+    $text = "";
+
+    if (count($today)) {
+      $text .= 
+      "HEUTE\n".
+      "=====================================================\n".
+      implode("\n-----------------------------------------------------\n", $today)."\n";
+    }
+    if (count($next7)) {
+      $text .=
+      "Nächste Woche\n".
+      "=====================================================\n".
+      implode("\n-----------------------------------------------------\n", $next7)."\n";
+    }
+    if (count($next14)) {
+      $text .=
+      "Nächste 2 Wochen\n".
+      "=====================================================\n".
+      implode("\n-----------------------------------------------------\n", $next14)."\n";
+    }
 
     return $text;
   }

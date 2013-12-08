@@ -14,9 +14,12 @@ $(function() {
     if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
       age--;
     }
+    var diff = (new Date(today.getFullYear(), dateParts[1] - 1, dateParts[2])).getTime() - today.getTime();
 
-    var div = $('<div/>').addClass('birthday').attr('title', hint)
-    .text(data.name + " (" + age + ")");
+    var title = data.date;
+    if (hint) title += " > " + hint;
+    var div = $('<div/>').addClass('birthday').attr('title', title)
+    .text(data.name + " (" + age + "/" + (age + 1) +")");
     $('#date-' + parseInt(dateParts[1], 10) + '-' + parseInt(dateParts[2], 10)).append(div);
 
     div.click(function () {
