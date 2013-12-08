@@ -1,7 +1,7 @@
 <?php
 
 function __autoload($class_name) {
-  include '../api/'.str_replace("\\", "/", $class_name) . '.php';
+  include __DIR__.'/../api/'.str_replace("\\", "/", $class_name) . '.php';
 }
 
 
