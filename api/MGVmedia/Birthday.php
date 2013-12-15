@@ -77,8 +77,13 @@ class Birthday {
     return $this->month() == date('m') && $this->day() == date('d');
   }
 
+  public function date($format) {
+    return date($format, $this->time());
+  }
+
   public function diff() {
-    $diff = date('z', $this->time()) - date('z');
+    $thisYear = mktime(0, 0, 0, $this->date('m'), $this->date('d'), date('Y'));
+    $diff = date('z', $thisYear) - date('z');
     $days = date('L')? 366 : 365;
     return ($diff + $days) % $days;
   }
