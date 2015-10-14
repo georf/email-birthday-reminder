@@ -37,9 +37,13 @@ $(function() {
     };
   };
 
+  function pad(num) {
+    var s = "0" + num;
+    return s.substr(s.length-2);
+  }
 
   function validDate(m, d) {
-    var text = "2000-" + m + "-" + d;
+    var text = "2000-" + pad(m) + "-" + pad(d);
     var date = Date.parse(text);
 
     if (isNaN(date)) {
