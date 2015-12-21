@@ -34,6 +34,18 @@ class Birthday {
     return $new;
   }
 
+  public function setDate($date) {
+    $this->date = $date;
+  }
+
+  public function setName($name) {
+    $this->name = $name;
+  }
+
+  public function setHint($hint) {
+    $this->hint = $hint;
+  }
+
   public function save() {
     if (empty($this->name)) throw new \Exception("Name not set");
     if (empty($this->date)) throw new \Exception("Date not valid");

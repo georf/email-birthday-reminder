@@ -19,7 +19,16 @@ Server::create('/')
   ->addGetRoute('report', function() {
     return Birthday::report();
   })
-  ->addPostRoute('birthday/(\d+)', function($id) {
+  ->addPostRoute('birthday/(\d+)', function($id, $date, $name, $hint) {
+    $birthday = Birthday::get($id);
+    $birthday->setDate($date);
+    $birthday->setName($name);
+    $birthday->setHint($hint);
+    if (!$birthday->save()) throw new Exception("bad parameter");
+
+    return $birthday->id;
+  })
+  ->addPostRoute('birthday/(\d+)/destroy', function($id) {
     $birthday = Birthday::get($id);
     if (!$birthday->destroy()) throw new Exception("bad parameter");
 

@@ -1,6 +1,8 @@
 $(function() {
   "use strict";
 
+  var currentBirthday = null;
+
   var Birthday = function (data) {
     var self = this;
     var id = data.id;
@@ -23,14 +25,36 @@ $(function() {
     $('#date-' + parseInt(dateParts[1], 10) + '-' + parseInt(dateParts[2], 10)).append(div);
 
     div.click(function () {
+      currentBirthday = self;
+      $('#dialog-actions').dialog('open');
+      return false;
+    });
+
+    this.destroyDialog = function () {
       var result = confirm("Wirklich den Geburtstag von " + name + " entfernen?");
       if (result) {
         destroyBirthday(id, function () {
           reloadBirthdays();
         });
       }
-      return false;
-    });
+    };
+ 
+    this.update = function (name, hint, date, success, failure) {
+      api('birthday/' + id, success, failure, {
+        name: name,
+        hint: hint,
+        date: date
+      });
+    };
+
+    this.updateDialog = function () {
+   
+      $('#name-u').val(name);
+      $('#hint-u').val(hint);
+      $('#datepicker-u').val(data.date);
+
+      $('#dialog-update-form').dialog('open');
+    };
 
     this.delete = function () {
       div.remove();
@@ -68,7 +92,7 @@ $(function() {
   }
 
   function destroyBirthday(id, success) {
-    api('birthday/' + id, success, alert, { id: id });
+    api('birthday/' + id + '/destroy', success, alert, { id: id });
   }
 
   var lastBirthdays = [];
@@ -139,10 +163,55 @@ $(function() {
   $('.date').click(function () {
     var td = $(this);
     $( "#datepicker" ).val('2000-' + td.data('m') + '-' + td.data('d'));
-    $( "#dialog-form" ).dialog( "open" );
+    $( "#dialog-create-form" ).dialog( "open" );
   });
 
-  $( "#dialog-form" ).dialog({
+  $('#dialog-actions').dialog({
+    autoOpen: false,
+    height: 300,
+    width: 350,
+    modal: true,
+    buttons: {
+      Destroy: function() {
+        $('#dialog-actions').dialog('close');
+        currentBirthday.destroyDialog();
+      },
+      Update: function() {
+        $('#dialog-actions').dialog('close');
+        currentBirthday.updateDialog();
+      }
+    }
+  });
+
+  $( "#dialog-update-form" ).dialog({
+    autoOpen: false,
+    height: 300,
+    width: 350,
+    modal: true,
+    buttons: {
+      "Update": function() {
+        var name = $('#name-u').val();
+        var hint = $('#hint-u').val();
+        var date = $('#datepicker-u').val();
+
+        currentBirthday.update(name, hint, date, function () {
+          $( "#dialog-update-form" ).dialog( "close" );
+          reloadBirthdays();
+        }, function (message) {
+          $('#update-error').text(message).show();
+        });
+
+      },
+      Cancel: function() {
+        $( "#dialog-update-form" ).dialog( "close" );
+      }
+    },
+    close: function() {
+      $('#update-error').hide();
+    }
+  });
+
+  $( "#dialog-create-form" ).dialog({
     autoOpen: false,
     height: 300,
     width: 350,
@@ -154,7 +223,7 @@ $(function() {
         var date = $('#datepicker').val();
 
         createBirthday(name, hint, date, function () {
-          $( "#dialog-form" ).dialog( "close" );
+          $( "#dialog-create-form" ).dialog( "close" );
           reloadBirthdays();
         }, function (message) {
           $('#create-error').text(message).show();
@@ -162,7 +231,7 @@ $(function() {
 
       },
       Cancel: function() {
-        $( "#dialog-form" ).dialog( "close" );
+        $( "#dialog-create-form" ).dialog( "close" );
       }
     },
     close: function() {
@@ -170,7 +239,7 @@ $(function() {
     }
   });
 
-  $( "#datepicker" ).datepicker({
+  $( "#datepicker, #datepicker-u" ).datepicker({
     changeMonth: true,
     changeYear: true,
     dateFormat: 'yy-mm-dd',

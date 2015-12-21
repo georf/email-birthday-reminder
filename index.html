@@ -12,7 +12,25 @@
     <div id="calendar"></div>
 
 
-    <div id="dialog-form" title="Create new date">
+    <div id="dialog-actions" title="Aktion">
+    </div>
+
+    <div id="dialog-update-form" title="Update date">
+      <p class="hide error" id="update-error"></p>
+      <form>
+      <fieldset>
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name-u" class="text ui-widget-content ui-corner-all"/>
+        <label for="hint">Hint</label>
+        <input type="text" name="hint" id="hint-u" value="" class="text ui-widget-content ui-corner-all"/>
+        <label for="datepicker">Date</label>
+        <input type="text" name="date" id="datepicker-u" valud="" class="text ui-widget-content ui-corner-all"/>
+      </fieldset>
+      </form>
+    </div>
+
+  </body>
+    <div id="dialog-create-form" title="Create new date">
       <p class="hide error" id="create-error"></p>
       <form>
       <fieldset>
