@@ -23,8 +23,8 @@ class Birthday {
     $db = self::DB();
     $row = $db->getFirstRow("
       SELECT * 
-      FROM `birthdays`
-      WHERE `id` = '".$db->escape($id)."'
+      FROM birthdays
+      WHERE id = ".$db->escape($id)."
       LIMIT 1
     ");
     $new->id = $row['id'];
@@ -177,8 +177,8 @@ class Birthday {
   public static function all() {
     return self::DB()->getRows("
       SELECT *
-      FROM `birthdays`
-      ORDER BY MONTH(`date`), DAY(`date`)
+      FROM birthdays
+      ORDER BY TO_CHAR(date, 'MM'), TO_CHAR(date, 'DD')
     ");
   }
 

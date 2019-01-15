@@ -2,53 +2,19 @@
 
 namespace MGVmedia;
 
-/**
- * Implements Database using MySQL
- *
- * @author Sebastian Gaul <sebastian@dev.mgvmedia.com>
- * @author Georg Limbach <georf@dev.mgvmedia.com>
- *
- */
 class Database {
-
-
-  /**
-   * Link to database session
-   *
-   * @var int
-   */
-  private $dbConnection = false;
-
-  /**
-   * Handler for automatic logging
-   */
+  private $pdo = false;
   private $log = false;
   private $logIp;
   private $logTable;
 
-
-  /**
-   * Establishes database connection
-   *
-   * @param string $host
-   * @param string $database
-   * @param string $username
-   * @param string $password
-   */
   public function __construct($host, $database, $username, $password) {
-
-    // Connect with persistent connection
-    $this->dbConnection = @mysql_pconnect($host, $username, $password);
-
-    if (!$this->dbConnection) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error());
+    try {
+      $conStr = sprintf("pgsql:host=%s;dbname=%s;user=%s;password=%s", $host, $database, $username, $password);
+      $this->pdo = new \PDO($conStr);
+    } catch (\PDOException $e) {
+      throw new \Exception($e->getMessage());
     }
-
-    if (!mysql_select_db($database, $this->dbConnection)) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error());
-    }
-
-    $this->query("SET NAMES 'utf8';");
   }
 
   public function enableLogging($ip, $table) {
@@ -57,98 +23,41 @@ class Database {
     $this->logTable = $table;
   }
 
+  public function getRows($query) {
 
-  /**
-   * Execute query and return rows as array
-   *
-   * @param string $mysqlQuery
-   * @return array
-   */
-  public function getRows($mysqlQuery) {
-
-    $result = $this->query($mysqlQuery);
-
-    if (!$result) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error().'<br/>'.$mysqlQuery);
-    }
+    $result = $this->query($query);
 
     $rows = array();
-    while ($row = mysql_fetch_assoc($result)) {
+    foreach ($result as $row) {
       $rows[] = $row;
     }
     return $rows;
   }
 
-
-  /**
-   * Excecute query and return the first row
-   *
-   * @param string $mysqlQuery
-   * @return array
-   */
-  public function getFirstRow($mysqlQuery, $key = false) {
-
-    $result = $this->query($mysqlQuery);
-
-    if (!$result) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error().'<br/>'.$mysqlQuery);
+  public function getFirstRow($query, $key = false) {
+    $rows = $this->getRows($query);
+    $assoc = $rows[0];
+    if ($key && isset($assoc[$key])) {
+        return $assoc[$key];
+    } else {
+        return $assoc;
     }
-
-    if (mysql_num_rows($result) === 0) {
-      return false;
-    }
-
-    $assoc = mysql_fetch_assoc($result);
-
-        if ($key && isset($assoc[$key])) {
-            return $assoc[$key];
-        } else {
-            return $assoc;
-        }
   }
 
-
-  /**
-   * Escape a string
-   *
-   * @param string $string
-   * @return string
-   */
   public function escape($string) {
-    return mysql_real_escape_string($string, $this->dbConnection);
+    return $this->pdo->quote($string);
   }
 
-
-  /**
-   * Inserts a row given by an array
-   *
-   * Returns the inserted id, 0 or false
-   *
-   * @param string $table
-   * @param array $values
-   * @return int | boolean
-   */
   public function insertRow($table, $values) {
 
     if (count($values) === 0) {
       throw new \Exception(_('No value given'));
     }
 
-    $mysqlQuery = 'INSERT INTO `'.$table.'` SET ';
-    $mysqlQuery .= $this->set($values);
-    $mysqlQuery .= ";";
-
-    $result = $this->query($mysqlQuery);
-
-    if (!$result) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error().'<br/>'.$mysqlQuery);
-    }
-
-    if (mysql_affected_rows($this->dbConnection) !== 1) {
-      return false;
-    }
-
-    $id = mysql_insert_id($this->dbConnection);
+    $query = 'INSERT INTO '.$table.' ('.$this->keys($values).') VALUES ('.$this->values($values).');';
+    $result = $this->query($query);
+    
+    $id = $this->pdo->lastInsertId();
     $this->insertLog("insert", $table, $id, $values);
 
     return $id;
@@ -156,50 +65,29 @@ class Database {
 
   public function deleteRow($table, $id, $colName = 'id') {
 
-    $mysqlQuery = 'DELETE FROM `'.$table.'` ';
-    $mysqlQuery .= " WHERE `".$colName."`='".$id."' LIMIT 1;";
-
-    $result = $this->query($mysqlQuery);
-
-    if (!$result) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error().'<br/>'.$mysqlQuery);
-    }
+    $query = 'DELETE FROM '.$table.' ';
+    $query .= " WHERE ".$colName."=".$id.";";
+    $result = $this->query($query);
 
     $this->insertLog("delete", $table, $id, null);
 
-    return  (mysql_affected_rows($this->dbConnection) === 1);
-
+    return true;
   }
 
-
-  /**
-   * Updates a row given by an array
-   *
-   * Returns success
-   *
-   * @param string $table
-   * @param array $values
-   * @return int | boolean
-   */
   public function updateRow($table, $id, $values, $colName = 'id') {
 
     if (count($values) === 0) {
       throw new \Exception(_('No value given'));
     }
 
-    $mysqlQuery = 'UPDATE `'.$table.'` SET ';
-    $mysqlQuery .= $this->set($values);
-    $mysqlQuery .= " WHERE `".$colName."`='".$id."' LIMIT 1;";
-
-    $result = $this->query($mysqlQuery);
-
-    if (!$result) {
-      throw new \Exception('MySQL Connection Database Error: ' . mysql_error().'<br/>'.$mysqlQuery);
-    }
+    $query = 'UPDATE '.$table.' SET ';
+    $query .= $this->set($values);
+    $query .= " WHERE ".$colName."='".$id."';";
+    $result = $this->query($query);
 
     $this->insertLog("update", $table, $id, $values);
 
-    return (mysql_affected_rows($this->dbConnection) === 1);
+    return true;
   }
 
   private function insertLog($type, $table, $id, $values) {
@@ -210,32 +98,50 @@ class Database {
         "type" => $type,
         "table" => $table,
         "table_id" => $id,
-        "set" => json_encode($values)
+        "set" => json_encode($values),
+        "logged" => date('Y-m-d H:i')
       ));
       $this->log = true;
     }
   }
 
-  private function set($values) {
-    $mysqlQuery = array();
+  private function keys($values) {
+    $query = array();
     foreach ($values as $col => $value) {
-      if (is_int($value))
-        $mysqlQuery[] = '`'.$col."` = ".$this->escape($value);
-      elseif (is_null($value))
-        $mysqlQuery[] = '`'.$col."` = NULL";
-      else
-        $mysqlQuery[] = '`'.$col."` = '".$this->escape($value)."'";
+      $query[] = '"'.$col.'"';
     }
-    return implode(' , ', $mysqlQuery);
+    return implode(' , ', $query);
   }
 
-  /**
-   * Execute a query and returns the result
-   *
-   * @param string $query
-   * @return int Result
-   */
+  private function values($values) {
+    $query = array();
+    foreach ($values as $col => $value) {
+      if (is_null($value))
+        $query[] = "NULL";
+      else
+        $query[] = $this->escape($value);
+    }
+    return implode(' , ', $query);
+  }
+
+  private function set($values) {
+    $query = array();
+    foreach ($values as $col => $value) {
+      if (is_null($value))
+        $query[] = ''.$col." = NULL";
+      else
+        $query[] = ''.$col." = ".$this->escape($value);
+    }
+    return implode(' , ', $query);
+  }
+
   public function query($query) {
-    return mysql_query($query, $this->dbConnection);
+    $result = $this->pdo->query($query);
+    if (!$result) $this->throw_error($query);
+    return $result;
+  }
+
+  private function throw_error($query) {
+    throw new \Exception('Database Error: '.$query."\n".print_r($this->pdo->errorInfo()), true);
   }
 }

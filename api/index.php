@@ -12,9 +12,9 @@ Server::create('/')
   })
   ->addPostRoute('birthday', function($date, $name, $hint) {
     $birthday = Birthday::create($date, $name, $hint);
-    if (!$birthday->save()) throw new Exception("bad parameter");
+    $birthday->save();
 
-    return $birthday->id;
+    return Birthday::all();
   })
   ->addGetRoute('report', function() {
     return Birthday::report();
@@ -24,14 +24,16 @@ Server::create('/')
     $birthday->setDate($date);
     $birthday->setName($name);
     $birthday->setHint($hint);
-    if (!$birthday->save()) throw new Exception("bad parameter");
+    $birthday->save();
 
-    return $birthday->id;
+    return Birthday::all();
   })
   ->addPostRoute('birthday/(\d+)/destroy', function($id) {
     $birthday = Birthday::get($id);
-    if (!$birthday->destroy()) throw new Exception("bad parameter");
+    $birthday->destroy();
 
-    return $birthday->id;
+    file_put_contents('/tmp/debug', date());
+
+    return Birthday::all();
   })
 ->run();
