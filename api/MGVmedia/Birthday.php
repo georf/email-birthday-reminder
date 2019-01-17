@@ -185,7 +185,7 @@ class Birthday {
   protected static function DB() {
     $db = new Database(Config::$db_hostname, Config::$db_database, Config::$db_username, Config::$db_password);
     if (isset($_SERVER['REMOTE_ADDR'])) {
-      $db->enableLogging($_SERVER['REMOTE_ADDR'], "birthday-logs");
+      $db->enableLogging($_SERVER['REMOTE_ADDR'], "birthday_logs");
     }
     return $db;
   }
