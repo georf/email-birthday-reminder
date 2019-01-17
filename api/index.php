@@ -32,7 +32,6 @@ Server::create('/')
     $birthday = Birthday::get($id);
     $birthday->destroy();
 
-    file_put_contents('/tmp/debug', date());
 
     return Birthday::all();
   })
